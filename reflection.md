@@ -14,6 +14,8 @@
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
+    Yes, my design changed during implementation. One change that was made was abandoning the idea of noting the owners age (as initially ideated) because I realized that this is not really helpful/relevant for the purpose of this project. 
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

@@ -54,6 +54,27 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   ...
 ```
 
+My sample output: 
+
+------------------
+
+========================================
+Today's Schedule
+========================================
+Owner: Alice  |  Time budget: 90 min
+Pets:  Biscuit (Golden Retriever), Mittens (Tabby)
+----------------------------------------
+1. [Biscuit] Give medicine (Meds, High) - 15 min
+2. [Mittens] Feed Mittens (Feeding, High) - 10 min
+3. [Biscuit] Morning walk (Walks, Medium) - 45 min
+----------------------------------------
+Why this plan:
+You had 90 minutes available today and scheduled 3 task(s).
+Skipped 'Grooming' (40 min, Low priority) because only 20 minute(s) remained.
+========================================
+
+------------------
+
 ## 🧪 Testing PawPal+
 
 ```bash

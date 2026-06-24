@@ -7,12 +7,14 @@ classDiagram
         +List~Pet~ pets
         +dict preferences
         +add_pet(Pet pet) void
+        +get_all_tasks() List~Task~
     }
 
     class Pet {
         +string name
         +string species
         +string breed
+        +int age
         +List~Task~ tasks
         +get_profile_summary() string
         +add_task(Task task) void
@@ -29,10 +31,10 @@ classDiagram
 
     class Scheduler {
         +sort_tasks_by_priority(List~Task~ tasks) List~Task~
-        +generate_daily_plan(Pet pet, int total_time_limit) List~Task~
+        +generate_daily_plan(Owner owner) List~Task~
         +get_reasoning_summary() string
     }
 
     Owner "1" --> "0..*" Pet : manages
     Pet "1" --> "0..*" Task : tracking
-    Scheduler ..> Pet : processes plan for
+    Scheduler ..> Owner : processes plan for

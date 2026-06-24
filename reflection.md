@@ -7,6 +7,8 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+    The initial UML design has four classes, one for the owner information, pet information, tasks, and then one to generate a final schedule. For the owner class, there should be basic information such as name, age, and preferences. Likewise, the pet class functions in a similar manner. The task class should describe and manage tasks, and the scheduler class should create a personalized schedule. 
+
 **b. Design changes**
 
 - Did your design change during implementation?

@@ -91,6 +91,15 @@ if owner.pets:
         priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
     with col3:
         target_pet_name = st.selectbox("For pet", [p.name for p in owner.pets])
+        recurrence = st.selectbox("Repeats", ["none", "daily", "weekly"])
+
+    # Optional start time. Leaving the box unchecked stores "" (no set time),
+    # which the Scheduler sorts to the end of the day and skips for conflicts.
+    set_time = st.checkbox("Give this task a start time")
+    start_time = ""
+    if set_time:
+        picked = st.time_input("Start time")
+        start_time = picked.strftime("%H:%M")
 
     if st.button("Add task"):
         target_pet = next(p for p in owner.pets if p.name == target_pet_name)
@@ -100,6 +109,8 @@ if owner.pets:
                 category=category,
                 duration_mins=int(duration),
                 priority=priority,
+                time=start_time,
+                recurrence=recurrence,
             )
         )
         st.success(f"Added '{task_title}' for {target_pet_name}.")
@@ -109,19 +120,44 @@ else:
 st.divider()
 
 st.subheader("Build Schedule")
+fair = st.checkbox(
+    "Share time fairly across pets",
+    help="Round-robin tasks so one pet doesn't use up the whole time budget.",
+)
 if st.button("Generate schedule"):
     scheduler = Scheduler()
-    plan = scheduler.generate_daily_plan(owner)
+    plan = scheduler.generate_daily_plan(owner, fair=fair)
+
+    # --- Conflict warning (most helpful placement: up top, before the plan) ---
+    # A pet owner needs to SEE a clash before they read the schedule, so it's
+    # surfaced first as a prominent warning that names the tasks and times.
+    # check_conflicts() returns "" when there are none and never raises.
+    conflict_msg = scheduler.check_conflicts(plan)
+    if conflict_msg:
+        st.warning(conflict_msg, icon="⚠️")
+    else:
+        st.success("No time conflicts — nothing overlaps. ✅")
 
     st.markdown("### Today's Schedule")
     if plan:
-        # Each task carries a back-reference to its pet (set in Pet.add_task).
-        for i, task in enumerate(plan, start=1):
-            pet_name = task.owner_pet.name if task.owner_pet else "?"
-            st.write(
-                f"{i}. **[{pet_name}]** {task.title} "
-                f"({task.category}, {task.priority}) — {task.duration_mins} min"
-            )
+        # Show the plan in chronological order using the Scheduler's time sort,
+        # rendered as a clean table instead of a plain bulleted list.
+        ordered = scheduler.sort_by_time(plan)
+        rows = [
+            {
+                "Time": task.time or "Anytime",
+                "Pet": task.owner_pet.name if task.owner_pet else "?",
+                "Task": task.title,
+                "Category": task.category,
+                "Priority": task.priority.capitalize(),
+                "Minutes": task.duration_mins,
+            }
+            for task in ordered
+        ]
+        st.table(rows)
+        st.success(
+            f"Scheduled {len(plan)} task(s) for {owner.name}."
+        )
     else:
         st.warning("No tasks could be scheduled today.")
 

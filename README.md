@@ -105,6 +105,35 @@ tests\test_pawpal.py ...............................                            
 
 Confidence Level: 5/5 Stars
 
+## ✨ Features
+
+The algorithms implemented in [`pawpal_system.py`](pawpal_system.py):
+
+- **Priority sorting** — orders tasks High → Medium → Low, then *shortest-first*
+  within a tier (a value-density heuristic so more care fits the budget).
+- **Sorting by time** — orders tasks by `"HH:MM"` start time, converted to
+  minutes since midnight so unpadded times like `9:00` sort correctly before
+  `10:00` (a plain string sort would not).
+- **Conflict warnings** — detects overlapping tasks by comparing their
+  `[start, start + duration)` windows, catching exact same-time clashes and
+  partial overlaps, **across different pets too**; surfaces a plain-language
+  warning that names the clashing tasks and never crashes on bad data.
+- **Daily & weekly recurrence** — completing a recurring task auto-spawns its
+  next occurrence (`+1 day` / `+7 days` via `timedelta`, so month/leap-year
+  boundaries roll over correctly) and attaches it to the same pet.
+- **Greedy daily planning** — fills the owner's time budget by keeping tasks
+  while they fit, and keeps scanning so a smaller lower-priority task can still
+  use leftover time.
+- **Fair sharing across pets** — an optional round-robin mode interleaves tasks
+  so one pet doesn't consume the entire budget.
+- **Task filtering** — filter by completion status and/or pet name
+  (case-insensitive), combined with AND, in a single pass.
+- **De-duplication** — collapses duplicate `(pet, category, title)` tasks so the
+  same chore added twice doesn't consume the budget twice.
+- **Plan reasoning** — explains what was scheduled and why, flags dropped
+  High-priority (welfare-critical) tasks, and gives a "what-if" tip for the
+  smallest extra time that would fit the next task.
+
 ## 📐 Smarter Scheduling
 
 Beyond a basic plan, PawPal+ adds several "smarter" behaviors. Each is
@@ -166,10 +195,80 @@ RECURRING TASK LOGIC
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. Enter owner information (name and time available)
+2. Enter pet information (name, species, breed)
+3. Enter task(s) (title, duration, pet, category of task, priority, repeats?)
+4. (Optional) - distribute time fairly amongst pets. 
+5. Create a schedule
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+
+CLI Output from running "main.py":
+
+--------------------------------------------------------------------------
+====================================================
+All tasks, as ADDED (unsorted)
+====================================================
+  1. 7:30 [Biscuit] Morning walk (Walks, Medium, 45 min) [todo]
+  2. 20:00 [Biscuit] Give medicine (Meds, High, 15 min) [todo]
+  3. 9:15 [Mittens] Grooming (Grooming, Low, 40 min) [todo]
+  4. 7:30 [Mittens] Feed Mittens (Feeding, High, 10 min) [todo]
+  5. 18:00 [Mittens] Evening feed (Feeding, High, 10 min) [done]
+
+====================================================
+All tasks, SORTED BY TIME (sort_by_time)
+====================================================
+  1. 7:30 [Biscuit] Morning walk (Walks, Medium, 45 min) [todo]
+  2. 7:30 [Mittens] Feed Mittens (Feeding, High, 10 min) [todo]
+  3. 9:15 [Mittens] Grooming (Grooming, Low, 40 min) [todo]
+  4. 18:00 [Mittens] Evening feed (Feeding, High, 10 min) [done]
+  5. 20:00 [Biscuit] Give medicine (Meds, High, 15 min) [todo]
+
+====================================================
+CONFLICT CHECK (check_conflicts)
+====================================================
+[!] Found 1 schedule conflict(s) - these tasks overlap in time:
+  - [!] Time clash (different pets): 'Morning walk' [Biscuit] 7:30-08:15 overlaps 'Feed Mittens' [Mittens] 7:30-07:40
+
+====================================================
+FILTER: incomplete tasks only (is_complete=False)
+====================================================
+  1. 7:30 [Biscuit] Morning walk (Walks, Medium, 45 min) [todo]
+  2. 20:00 [Biscuit] Give medicine (Meds, High, 15 min) [todo]
+  3. 9:15 [Mittens] Grooming (Grooming, Low, 40 min) [todo]
+  4. 7:30 [Mittens] Feed Mittens (Feeding, High, 10 min) [todo]
+
+====================================================
+FILTER: Mittens's tasks only (pet_name='Mittens')
+====================================================
+  1. 9:15 [Mittens] Grooming (Grooming, Low, 40 min) [todo]
+  2. 7:30 [Mittens] Feed Mittens (Feeding, High, 10 min) [todo]
+  3. 18:00 [Mittens] Evening feed (Feeding, High, 10 min) [done]
+
+====================================================
+FILTER + SORT: Mittens's incomplete tasks, by time
+====================================================
+  1. 7:30 [Mittens] Feed Mittens (Feeding, High, 10 min) [todo]
+  2. 9:15 [Mittens] Grooming (Grooming, Low, 40 min) [todo]
+
+====================================================
+FILTER + SORT: Biscuit's incomplete tasks, by time
+====================================================
+  1. 7:30 [Biscuit] Morning walk (Walks, Medium, 45 min) [todo]
+  2. 20:00 [Biscuit] Give medicine (Meds, High, 15 min) [todo]
+
+====================================================
+Today's Schedule
+====================================================
+Owner: Alice  |  Time budget: 90 min
+Pets:  Biscuit (Golden Retriever), Mittens (Tabby)
+----------------------------------------------------
+1. [Mittens] Feed Mittens (Feeding, High) - 10 min
+2. [Biscuit] Give medicine (Meds, High) - 15 min
+3. [Biscuit] Morning walk (Walks, Medium) - 45 min
+----------------------------------------------------
+Why this plan:
+You had 90 minutes available today and scheduled 3 task(s), using 70 min (20 min left).
+Skipped 'Grooming' (40 min, Low priority).
+Tip: add 20 more minute(s) to also fit 'Grooming'.
+====================================================

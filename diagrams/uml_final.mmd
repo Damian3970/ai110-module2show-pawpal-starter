@@ -1,0 +1,61 @@
+classDiagram
+    %% PawPal+ — Final Class Diagram (matches pawpal_system.py as built)
+
+    class Owner {
+        +string name
+        +int available_time_mins
+        +List~Pet~ pets
+        +dict preferences
+        +add_pet(Pet pet) void
+        +get_all_tasks() List~Task~
+    }
+
+    class Pet {
+        +string name
+        +string species
+        +string breed
+        +List~Task~ tasks
+        +get_profile_summary() string
+        +add_task(Task task) void
+    }
+
+    class Task {
+        +string title
+        +string category
+        +int duration_mins
+        +string priority
+        +string time
+        +string recurrence
+        +date due_date
+        +bool is_scheduled
+        +bool is_complete
+        +Pet owner_pet
+        +update_task(string title, string category, int duration_mins, string priority) void
+        +next_occurrence() Task
+        +mark_complete() Task
+    }
+
+    class Scheduler {
+        +sort_tasks_by_priority(List~Task~ tasks) List~Task~
+        +sort_by_time(List~Task~ tasks) List~Task~
+        +filter_tasks(List~Task~ tasks) List~Task~
+        +find_conflicts(List~Task~ tasks) List~Conflict~
+        +check_conflicts(List~Task~ tasks) string
+        +generate_daily_plan(Owner owner, bool fair) List~Task~
+        +get_reasoning_summary() string
+    }
+
+    class Conflict {
+        +Task task_a
+        +Task task_b
+        +bool same_pet
+        +describe() string
+    }
+
+    Owner "1" --> "0..*" Pet : manages
+    Pet "1" --> "0..*" Task : tracks
+    Task "0..*" --> "1" Pet : owner_pet
+    Scheduler ..> Owner : plans for
+    Scheduler ..> Task : sorts/filters
+    Scheduler ..> Conflict : produces
+    Conflict --> "2" Task : references

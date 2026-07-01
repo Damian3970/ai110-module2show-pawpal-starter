@@ -87,9 +87,23 @@ pytest --cov
 
 Sample test output:
 
+The tests cover sorting correctness, recurrence logic, conflict detection, scheduling, and filtering. 
+
 ```
 # Paste your pytest output here
 ```
+================================================================= test session starts ==================================================================
+platform win32 -- Python 3.13.5, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\adami\OneDrive\Desktop\AI-110\ai110-module2show-pawpal-starter
+plugins: anyio-4.13.0
+collected 31 items                                                                                                                                      
+
+tests\test_pawpal.py ...............................                                                                                              [100%]
+
+================================================================== 31 passed in 0.09s ==================================================================
+
+
+Confidence Level: 5/5 Stars
 
 ## 📐 Smarter Scheduling
 

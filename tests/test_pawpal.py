@@ -327,6 +327,56 @@ def test_check_conflicts_does_not_crash_on_bad_input():
     assert warning.startswith("[!]")
 
 
+# ---------------------------------------------------------------------------
+# Rubric coverage: duplicate (identical) times
+# ---------------------------------------------------------------------------
+
+def test_find_conflicts_flags_duplicate_times():
+    """Conflict Detection: two tasks at the EXACT same time are flagged."""
+    pet = Pet("Biscuit", "Dog", "Golden Retriever")
+    feed = Task("Feed", "Feeding", 15, "High", time="08:00")   # 08:00-08:15
+    walk = Task("Walk", "Walks", 30, "Medium", time="08:00")   # 08:00-08:30
+    pet.add_task(feed)
+    pet.add_task(walk)
+
+    conflicts = Scheduler().find_conflicts(pet.tasks)
+
+    assert len(conflicts) == 1  # the identical start time is a clash
+
+
+def test_check_conflicts_reports_duplicate_times():
+    """Conflict Detection: the Scheduler surfaces duplicate-time clashes as text."""
+    pet = Pet("Biscuit", "Dog", "Golden Retriever")
+    pet.add_task(Task("Feed", "Feeding", 15, "High", time="12:00"))
+    pet.add_task(Task("Meds", "Meds", 10, "High", time="12:00"))  # same time
+
+    warning = Scheduler().check_conflicts(pet.tasks)
+
+    assert "1 schedule conflict" in warning
+    assert "Feed" in warning and "Meds" in warning
+
+
+def test_three_tasks_same_time_flag_all_pairs():
+    """Conflict Detection: N tasks sharing a time yield every pairwise clash."""
+    pet = Pet("Biscuit", "Dog", "Golden Retriever")
+    for title in ("Feed", "Meds", "Walk"):
+        pet.add_task(Task(title, "Care", 10, "High", time="09:00"))
+
+    conflicts = Scheduler().find_conflicts(pet.tasks)
+
+    assert len(conflicts) == 3  # 3 tasks -> C(3,2) = 3 overlapping pairs
+
+
+def test_sort_by_time_keeps_both_when_times_tie():
+    """Sorting Correctness: duplicate times don't drop or lose a task."""
+    first = Task("Feed", "Feeding", 10, "High", time="08:00")
+    second = Task("Meds", "Meds", 10, "High", time="08:00")  # identical time
+
+    ordered = Scheduler().sort_by_time([first, second])
+
+    assert ordered == [first, second]  # both kept, stable order
+
+
 def test_fair_mode_interleaves_across_pets():
     """Fairness: fair=True gives each pet attention instead of one hogging time."""
     owner = Owner(name="Test", available_time_mins=20)

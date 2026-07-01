@@ -93,14 +93,60 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+Beyond a basic plan, PawPal+ adds several "smarter" behaviors. Each is
+implemented in [`pawpal_system.py`](pawpal_system.py) and covered by tests in
+[`tests/test_pawpal.py`](tests/test_pawpal.py).
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Sort by priority | `Scheduler.sort_tasks_by_priority()` | High → Medium → Low, then **shortest first** within a tier so more care fits the budget. |
+| Sort by time | `Scheduler.sort_by_time()` | Orders tasks by their `"HH:MM"` start time. |
+| Filter tasks | `Scheduler.filter_tasks()` | Filter by completion status and/or pet name; both criteria combine (AND). |
+| Conflict detection | `Scheduler.find_conflicts()` | Finds every pair of tasks whose time windows overlap. |
+| Lightweight conflict check | `Scheduler.check_conflicts()` | Returns a printable warning string (never raises). |
+| Recurring tasks | `Task.mark_complete()` / `Task.next_occurrence()` | Completing a daily/weekly task auto-creates its next occurrence. |
+| Plan generation | `Scheduler.generate_daily_plan()` | Greedy fill within the time budget; `fair=True` shares time across pets. |
+| Plan reasoning | `Scheduler.get_reasoning_summary()` | Explains what was kept/dropped and why. |
+
+SORTING BEHAVIOR 
+
+- **`Scheduler.sort_by_time(tasks)`** sorts tasks by their `"HH:MM"` start time
+  using `sorted()` with a lambda `key` that converts each time to minutes since
+  midnight (`_time_to_minutes`). Comparing numbers rather than raw strings means
+  an unpadded `"9:00"` correctly sorts *before* `"10:00"` (a plain string sort
+  would get this wrong because `'9' > '1'`).
+- **`Scheduler.sort_tasks_by_priority(tasks)`** sorts by `(priority, duration)`,
+  so higher-priority tasks come first and, within the same priority, shorter
+  tasks come first to pack more into the day.
+
+FILTERING BEHAVIOR
+
+- **`Scheduler.filter_tasks(tasks, *, is_complete=None, pet_name=None)`** returns
+  the subset matching the given criteria. Filter by **completion status**
+  (`is_complete=True/False`), by **pet name** (case-insensitive), or both — the
+  two criteria combine with AND. Passing neither returns a copy of the full
+  list. It runs in a single pass over the tasks.
+
+CONFLICT DETECTION LOGIC 
+
+- **`Scheduler.find_conflicts(tasks)`** returns the list of overlapping task
+  pairs. Each task occupies the window `[start, start + duration_mins)`; two
+  tasks conflict when those windows overlap. This catches exact same-start
+  collisions *and* partial overlaps, and it flags conflicts **across different
+  pets** too, since one owner can't be in two places at once.
+- **`Scheduler.check_conflicts(tasks)`** is the lightweight wrapper: it returns
+  a ready-to-print warning string (or `""` when there are no clashes) and never
+  raises, so a bad time value degrades to a soft warning instead of a crash.
+
+RECURRING TASK LOGIC
+
+- A `Task` has a `recurrence` field (`"none"`, `"daily"`, or `"weekly"`) and a
+  `due_date`. When **`Task.mark_complete()`** is called on a recurring task, it
+  marks the task done and automatically spawns the next occurrence via
+  **`Task.next_occurrence()`**, attaching it to the same pet.
+- The next due date is computed with `datetime.timedelta` (`+1 day` for daily,
+  `+7 days` for weekly), so month/year/leap-year boundaries roll over correctly
+  (e.g. `2026-01-31` → `2026-02-01`).
 
 ## 📸 Demo Walkthrough
 

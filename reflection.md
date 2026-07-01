@@ -30,6 +30,8 @@
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
+    One tradeoff the scheduler makes is that it places more emphasis on higher-priority tasks, even if that means less tasks will get done. This tradeoff is reasonable because higher-priority tasks are more essential for the wellbeing of the owner's pets. Therefore, it makes sense to, for example, the owner to take their dog to the vet (1 task), rather than take them on a walk and play with them (2 tasks). 
+
 ---
 
 ## 3. AI Collaboration

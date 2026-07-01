@@ -115,12 +115,11 @@ if st.button("Generate schedule"):
 
     st.markdown("### Today's Schedule")
     if plan:
-        # Rebuild the task -> pet link for display (scheduler works on a flat list).
-        task_to_pet = {id(task): pet for pet in owner.pets for task in pet.tasks}
+        # Each task carries a back-reference to its pet (set in Pet.add_task).
         for i, task in enumerate(plan, start=1):
-            pet = task_to_pet[id(task)]
+            pet_name = task.owner_pet.name if task.owner_pet else "?"
             st.write(
-                f"{i}. **[{pet.name}]** {task.title} "
+                f"{i}. **[{pet_name}]** {task.title} "
                 f"({task.category}, {task.priority}) — {task.duration_mins} min"
             )
     else:
